@@ -22,9 +22,9 @@ fn bench_dgemm(c: &mut Criterion) {
         let mat_a = vec![0.; i * i];
         let mat_b = vec![0.; i * i];
         let mut mat_c = vec![0.; i * i];
-        //group.bench_function(BenchmarkId::new("Naive", i), |b| {
-        //    b.iter(|| ref_dgemm(*i as usize, &mat_a, &mat_b, &mut mat_c))
-        //});
+        group.bench_function(BenchmarkId::new("Naive", i), |b| {
+           b.iter(|| ref_dgemm(*i as usize, &mat_a, &mat_b, &mut mat_c))
+        });
 
         group.bench_function(BenchmarkId::new("Block", i), |b| {
             b.iter(|| unsafe {

@@ -9,9 +9,9 @@ static BLOCK_SIZE: usize = 8;
  * where A, B, and C are lda*lda matrices stored in column-major format.
  * On exit, A and B maintain their input values. */
 pub unsafe fn dgemm(lda: usize, a: *const f64, b: *const f64, c: *mut f64) {
-    let mut block_a: Vec<f64> = align_first::<f64, A64>(BLOCK_SIZE);
-    let mut block_b: Vec<f64> = align_first::<f64, A64>(BLOCK_SIZE);
-    let mut block_c: Vec<f64> = align_first::<f64, A64>(BLOCK_SIZE);
+    let mut block_a: Vec<f64> = align_first::<f64, A64>(BLOCK_SIZE*BLOCK_SIZE);
+    let mut block_b: Vec<f64> = align_first::<f64, A64>(BLOCK_SIZE*BLOCK_SIZE);
+    let mut block_c: Vec<f64> = align_first::<f64, A64>(BLOCK_SIZE*BLOCK_SIZE);
 
     for i in (0..lda).step_by(BLOCK_SIZE) {
         for j in (0..lda).step_by(BLOCK_SIZE) {
@@ -135,41 +135,6 @@ unsafe fn do_block(lda: usize, a: *mut f64, b: *mut f64, c: *mut f64) {
     }
 }
 
-/*unsafe fn copy_col_major(
-    x: *const f64,
-    n: usize,
-    right: usize,
-    down: usize,
-    l: usize,
-    temp: *mut f64,
-) {
-    // for each column of x
-    if down < n || right < n {
-        for i in 0..n {
-            for j in 0..n {
-                if j >= down {
-                    let offset = i * n + j;
-                    ptr::write(temp.offset(offset as isize), 0f64);
-                } else if i >= right {
-                    //temp[i * n + j] = 0;
-                    let offset = i * n + j;
-                    ptr::write(temp.offset(offset as isize), 0f64);
-                } else {
-                    //temp[i * n + j] = x[i * l + j];
-                    let offset = i * l + j;
-                    ptr::write(temp.offset(offset as isize), 0f64);
-                }
-            }
-        }
-    } else {
-        for i in 0..n {
-            for j in (0..n).step_by(16) {
-                //use avx
-            }
-        }
-    }
-}*/
-
 unsafe fn copy_col_major(
     x: *const f64,
     n: usize,
@@ -181,16 +146,18 @@ unsafe fn copy_col_major(
     for i in 0..n {
         for j in 0..n {
             let offset = i * n + j;
+            // println!("{}, {}, {}", i,j,offset);
             if j >= down {
                 ptr::write(temp.offset(offset as isize), 0f64);
             } else if i >= right {
                 ptr::write(temp.offset(offset as isize), 0f64);
             } else {
                 let x_offset = i * l + j;
+                // println!("x offset: {}", x_offset);
+                let value = ptr::read(x.offset(x_offset as isize));
                 ptr::write(
                     temp.offset(offset as isize),
-                    ptr::read(x.offset(x_offset as isize)),
-                );
+                    value);
             }
         }
     }
