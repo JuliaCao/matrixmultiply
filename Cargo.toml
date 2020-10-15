@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 rawpointer = "0.2"
 maligned = "0.2.1"
+rand = "0.7.3"
 
 [dev-dependencies]
 criterion = "0.3"
