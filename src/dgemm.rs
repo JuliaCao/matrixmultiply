@@ -9,10 +9,12 @@ static BLOCK_SIZE: usize = 8;
  * where A, B, and C are lda*lda matrices stored in column-major format.
  * On exit, A and B maintain their input values. */
 pub unsafe fn dgemm(lda: usize, a: *const f64, b: *const f64, c: *mut f64) {
-    let mut block_a: Vec<f64> = align_first::<f64, A64>(BLOCK_SIZE*BLOCK_SIZE);
-    let mut block_b: Vec<f64> = align_first::<f64, A64>(BLOCK_SIZE*BLOCK_SIZE);
-    let mut block_c: Vec<f64> = align_first::<f64, A64>(BLOCK_SIZE*BLOCK_SIZE);
+    let mut block_a: Vec<f64> = align_first::<f64, A64>(BLOCK_SIZE * BLOCK_SIZE);
+    let mut block_b: Vec<f64> = align_first::<f64, A64>(BLOCK_SIZE * BLOCK_SIZE);
+    let mut block_c: Vec<f64> = align_first::<f64, A64>(BLOCK_SIZE * BLOCK_SIZE);
 
+    //println!("passed in val for a {}", *(a.offset(0)));
+    //println!("passed val for b {}", *(b.offset(0)));
     for i in (0..lda).step_by(BLOCK_SIZE) {
         for j in (0..lda).step_by(BLOCK_SIZE) {
             let m = min(BLOCK_SIZE, lda - i);
@@ -28,13 +30,13 @@ pub unsafe fn dgemm(lda: usize, a: *const f64, b: *const f64, c: *mut f64) {
             );
 
             for k in (0..lda).step_by(BLOCK_SIZE) {
-                let k = min(BLOCK_SIZE, lda - k);
+                let p = min(BLOCK_SIZE, lda - k);
                 let a_offset = i + k * lda;
                 let b_offset = k + j * lda;
                 copy_row_major(
                     a.offset(a_offset as isize),
                     BLOCK_SIZE,
-                    k,
+                    p,
                     m,
                     lda,
                     block_a.as_mut_ptr(),
@@ -43,7 +45,7 @@ pub unsafe fn dgemm(lda: usize, a: *const f64, b: *const f64, c: *mut f64) {
                     b.offset(b_offset as isize),
                     BLOCK_SIZE,
                     n,
-                    k,
+                    p,
                     lda,
                     block_b.as_mut_ptr(),
                 );
@@ -82,7 +84,7 @@ unsafe fn unpad_col_to_col_dst(
                 let x_offset = i + n * j;
                 ptr::write(
                     dst.offset(dst_offset as isize),
-                    ptr::read(x.offset(x_offset as isize)),
+                    *(x.offset(x_offset as isize)),
                 );
             }
         }
@@ -108,10 +110,10 @@ unsafe fn copy_row_major(
                 ptr::write(temp.offset(offset as isize), 0f64);
             } else {
                 let x_offset = i * l + j;
-                ptr::write(
-                    temp.offset(offset as isize),
-                    ptr::read(x.offset(x_offset as isize)),
-                );
+                //println!("offset: {}", offset);
+                //println!("x_offset: {}", x_offset);
+                //println!("x value: {}", *(x.offset(x_offset as isize)));
+                ptr::write(temp.offset(offset as isize), *(x.offset(x_offset as isize)));
             }
         }
     }
@@ -123,14 +125,22 @@ unsafe fn do_block(lda: usize, a: *mut f64, b: *mut f64, c: *mut f64) {
         // for each col j of b
         for j in 0..lda {
             let offset = i + j * lda;
-            let mut cij = ptr::read(c.offset(offset as isize));
+            let mut cij = *(c.offset(offset as isize));
             for k in 0..lda {
                 let a_offset = k + i * lda;
                 let b_offset = k + j * lda;
-                cij +=
-                    ptr::read(a.offset(a_offset as isize)) * ptr::read(b.offset(b_offset as isize));
+
+                /*                if i == 0 && j == 0 && k == 0 {
+                //println!("aik={}", *(a.offset(a_offset as isize)));
+                //println!("bkj={}", *b.offset(b_offset as isize));
+                //println!("cij={}", *c.offset(offset as isize));
+                 */
+                cij += *(a.offset(a_offset as isize)) * *(b.offset(b_offset as isize));
+
+                //println!("cij after addtion = {}", cij);
+                ptr::write(c.offset(offset as isize), cij);
+                //}
             }
-            ptr::write(c.offset(offset as isize), cij);
         }
     }
 }
@@ -146,18 +156,14 @@ unsafe fn copy_col_major(
     for i in 0..n {
         for j in 0..n {
             let offset = i * n + j;
-            // println!("{}, {}, {}", i,j,offset);
             if j >= down {
                 ptr::write(temp.offset(offset as isize), 0f64);
             } else if i >= right {
                 ptr::write(temp.offset(offset as isize), 0f64);
             } else {
                 let x_offset = i * l + j;
-                // println!("x offset: {}", x_offset);
-                let value = ptr::read(x.offset(x_offset as isize));
-                ptr::write(
-                    temp.offset(offset as isize),
-                    value);
+                let value = *(x.offset(x_offset as isize));
+                ptr::write(temp.offset(offset as isize), value);
             }
         }
     }

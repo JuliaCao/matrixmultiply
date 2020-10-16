@@ -16,7 +16,7 @@ Memory: 16 GB 3733 MHz LPDDR4X
 * Copies matrices into column major and row major respectively for optimal access pattern
 * Performs normal 3 loop once we are inside a small block
 * Optimizes for block size 4096
-* Achieve ~4x performance improvement
+* Achieves ~3x performance improvement
 * [Performance report](./benchmark_report/block_vs_naive.pdf)
 
 ## Tools
