@@ -6,10 +6,15 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+bench = false
+
 [dependencies]
 rawpointer = "0.2"
 maligned = "0.2.1"
 rand = "0.7.3"
+blas = { version = "0.20", default-features = false }
+blas-src = { version = "0.2.0", default-features = false }
 
 [dev-dependencies]
 criterion = "0.3"
