@@ -17,6 +17,11 @@ Memory: 16 GB 3733 MHz LPDDR4X
 * Achieve ~4x performance improvement
 * [Performance report](./benchmark_report/block_vs_naive.pdf)
 
+### Block Multiply + Algorithm Optimization
+* Uses the following addition scheme. The algorithm accesses columns of all 3 matrices sequentially, enabling us to contiguously access memory for column major matrices. 
+![image](./algo.png)
+* [Performance report](./benchmark_report/block_vs_naive_vs_blas.pdf)
+
 ## Tools
 * criterion for benchmark
 

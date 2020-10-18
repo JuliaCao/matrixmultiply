@@ -33,7 +33,7 @@ pub unsafe fn dgemm(lda: usize, a: *const f64, b: *const f64, c: *mut f64) {
                 let p = min(BLOCK_SIZE, lda - k);
                 let a_offset = i + k * lda;
                 let b_offset = k + j * lda;
-                copy_row_major(
+                copy_col_major(
                     a.offset(a_offset as isize),
                     BLOCK_SIZE,
                     p,
@@ -49,7 +49,7 @@ pub unsafe fn dgemm(lda: usize, a: *const f64, b: *const f64, c: *mut f64) {
                     lda,
                     block_b.as_mut_ptr(),
                 );
-                do_block(
+                do_block_with_optimized_algorithm(
                     BLOCK_SIZE,
                     block_a.as_mut_ptr(),
                     block_b.as_mut_ptr(),
@@ -139,6 +139,27 @@ unsafe fn do_block(lda: usize, a: *mut f64, b: *mut f64, c: *mut f64) {
 
                 //println!("cij after addtion = {}", cij);
                 ptr::write(c.offset(offset as isize), cij);
+                //}
+            }
+        }
+    }
+}
+
+unsafe fn do_block_with_optimized_algorithm(lda: usize, a: *mut f64, b: *mut f64, c: *mut f64) {
+    // for each col i of B
+    for i in 0..lda {
+        // for each col j of A / row j of B
+        for j in 0..lda {
+            let b_offset = j + i * lda;
+            let bji = *(b.offset(b_offset as isize));
+            // for each row k of A
+            for k in 0..lda {
+                let a_offset = k + j * lda;
+                let c_offset = k + i * lda;
+                let mut cki = *(c.offset(c_offset as isize));
+                cki += *(a.offset(a_offset as isize)) * bji;
+
+                ptr::write(c.offset(c_offset as isize), cki);
                 //}
             }
         }

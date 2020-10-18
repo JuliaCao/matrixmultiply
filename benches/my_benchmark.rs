@@ -28,7 +28,7 @@ fn bench_dgemm(c: &mut Criterion) {
             b.iter(|| ref_dgemm(*i as usize, &mat_a, &mat_b, &mut mat_c))
         });
 
-        group.bench_function(BenchmarkId::new("block", i), |b| {
+        group.bench_function(BenchmarkId::new("block-w-optimized-algo", i), |b| {
             b.iter(|| unsafe {
                 dgemm(
                     *i as usize,
