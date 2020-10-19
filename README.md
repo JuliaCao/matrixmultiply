@@ -23,7 +23,7 @@ Memory: 16 GB 3733 MHz LPDDR4X
 * [Performance report](./benchmark_report/block_vs_naive_vs_blas.pdf)
 
 ## Tools
-#### [criterion](https://github.com/bheisler/criterion.rs)
+#### [Criterion](https://github.com/bheisler/criterion.rs)
 
 #### OpenBlas 
 * Installed with homebrew
