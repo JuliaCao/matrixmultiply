@@ -2,7 +2,7 @@ use maligned::{align_first, A64};
 use std::cmp::min;
 use std::ptr;
 
-static BLOCK_SIZE: usize = 8;
+static BLOCK_SIZE: usize = 48;
 
 /* This routine performs a dgemm operation
  *  C := C + A * B
