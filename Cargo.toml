@@ -15,9 +15,9 @@ maligned = "0.2.1"
 rand = "0.7.3"
 blas = { version = "0.20", default-features = false }
 blas-src = { version = "0.2.0", default-features = false }
+criterion = "0.3"
 
 [dev-dependencies]
-criterion = "0.3"
 
 [[bench]]
 name = "my_benchmark"

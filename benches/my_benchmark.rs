@@ -1,10 +1,11 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 extern crate matrixmultiply;
+
 pub use matrixmultiply::dgemm;
+pub use matrixmultiply::flop_measurement::FlopMeasurement;
 pub use matrixmultiply::ref_dgemm;
 use rand::Rng;
 
-#[macro_use]
 extern crate blas;
 
 use std::os::raw::c_int;
@@ -12,18 +13,27 @@ use std::os::raw::c_int;
 #[allow(non_camel_case_types)]
 type blas_index = c_int; // blas index type
 
-fn bench_dgemm(c: &mut Criterion) {
-    let mut group = c.benchmark_group("DGEMM");
-    let mut rng = rand::thread_rng();
+static NUM_ITER: usize = 100;
 
+fn bench_dgemm(c: &mut Criterion<FlopMeasurement>) {
     for i in [
         31, 32, 96, 97, 127, 128, 129, 229, 255, 256, 257, 319, 320, 321, 512, 767, 768, 769,
     ]
     .iter()
     {
+        let measurement = FlopMeasurement::new(*i, NUM_ITER);
+        // hacky way of altering measurement
+        let mut new_c = Criterion::default()
+            .with_measurement(measurement)
+            .sample_size(NUM_ITER);
+
+        let mut group = new_c.benchmark_group("DGEMM");
+        let mut rng = rand::thread_rng();
+
         let mat_a = vec![rng.gen::<f64>(); i * i];
         let mat_b = vec![rng.gen::<f64>(); i * i];
         let mut mat_c = vec![rng.gen::<f64>(); i * i];
+
         group.bench_function(BenchmarkId::new("naive", i), |b| {
             b.iter(|| ref_dgemm(*i as usize, &mat_a, &mat_b, &mut mat_c))
         });
@@ -58,9 +68,19 @@ fn bench_dgemm(c: &mut Criterion) {
                 )
             })
         });
+        group.finish();
     }
-    group.finish();
 }
 
-criterion_group!(benches, bench_dgemm);
+fn alternate_measurement() -> Criterion<FlopMeasurement> {
+    Criterion::default()
+        .with_measurement(FlopMeasurement::new(1, NUM_ITER))
+        .sample_size(NUM_ITER)
+}
+
+criterion_group! {
+    name = benches;
+    config = alternate_measurement();
+    targets = bench_dgemm
+}
 criterion_main!(benches);
