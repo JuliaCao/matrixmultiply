@@ -17,7 +17,7 @@ blas = { version = "0.20", default-features = false }
 blas-src = { version = "0.7.0", default-features = false }
 
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.4"
 
 [[bench]]
 name = "my_benchmark"
